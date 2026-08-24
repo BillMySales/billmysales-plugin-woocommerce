@@ -924,6 +924,18 @@ function wcon_build_payload($order) {
     $request    = new WP_REST_Request('GET', '/wc/v3/orders/' . $order->get_id());
     $request->set_param('id', $order->get_id());
 
+    // NOTA (fix): WooCommerce renombró internamente el método usado por sus
+    // controllers CRUD (orders, products, etc.) de "prepare_item_for_response"
+    // a "prepare_object_for_response". El "prepare_item_for_response" heredado
+    // de WP_REST_Controller ya no está sobreescrito por WC_REST_Orders_Controller
+    // y devuelve siempre un WP_Error ("Method not implemented"), lo que hacía
+    // que este payload fuera en realidad un WP_Error y que
+    // wcon_append_custom_fields_to_payload() explotara con un fatal error al
+    // intentar tratarlo como array -- tumbando el checkout completo. Se usa
+    // "prepare_object_for_response" (público en WC_REST_Orders_V2_Controller,
+    // que WC_REST_Orders_Controller extiende) porque es el método que
+    // realmente arma el array + agrega los "_links", equivalente al viejo
+    // "prepare_item_for_response".
     $response = $controller->prepare_object_for_response($order, $request);
 
     if (is_wp_error($response)) {
