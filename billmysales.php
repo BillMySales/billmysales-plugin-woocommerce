@@ -1031,7 +1031,11 @@ function wcon_notify_if_applicable($order_id, $status, $order) {
 
     $settings = wcon_get_settings();
 
-    if (empty($settings['active']) || empty($settings['url']) || empty($settings['secret'])) {
+    if (empty($settings['active'])) {
+        return;
+    }
+
+    if (empty($settings['url']) || empty($settings['secret'])) {
         return;
     }
 
@@ -1039,8 +1043,9 @@ function wcon_notify_if_applicable($order_id, $status, $order) {
         return;
     }
 
-    $payload  = wcon_build_payload($order);
-    $payload  = wcon_append_custom_fields_to_payload($payload, $order);
+    $payload = wcon_build_payload($order);
+    $payload = wcon_append_custom_fields_to_payload($payload, $order);
+
     $response = wcon_notify($settings, $payload);
 
     if (!function_exists('wc_get_logger')) {
@@ -1058,7 +1063,7 @@ function wcon_notify_if_applicable($order_id, $status, $order) {
     } else {
         $code = wp_remote_retrieve_response_code($response);
         $logger->info(
-            sprintf('Orden #%d: notificada a %s. Código de respuesta: %s', $order_id, $settings['url'], $code),
+            sprintf('Orden #%d: notificada a %s. Código de respuesta: %s.', $order_id, $settings['url'], $code),
             $context
         );
     }
