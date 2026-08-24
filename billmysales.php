@@ -38,7 +38,8 @@ if (!defined('ABSPATH')) {
  *
  * @return bool
  */
-function wcon_is_woocommerce_active() {
+function wcon_is_woocommerce_active()
+{
     $active_plugins = (array) get_option('active_plugins', []);
 
     if (is_multisite()) {
@@ -150,7 +151,8 @@ add_action('admin_enqueue_scripts', function ($hook) {
  * las pestañas son la convención estándar que WooCommerce mismo usa en
  * sus propias pantallas de Ajustes.
  */
-function wcon_render_settings_page() {
+function wcon_render_settings_page()
+{
     if (!current_user_can('manage_woocommerce')) {
         return;
     }
@@ -177,7 +179,7 @@ function wcon_render_settings_page() {
             } else {
                 wcon_render_configuration_tab();
             }
-            ?>
+    ?>
         </div>
     </div>
     <?php
@@ -211,7 +213,8 @@ add_action('admin_init', function () {
  *
  * @return array Ej: ['pending' => 'Pendiente de pago', 'completed' => 'Completado', ...]
  */
-function wcon_get_clean_statuses() {
+function wcon_get_clean_statuses()
+{
     $clean = [];
     foreach (wc_get_order_statuses() as $key => $label) {
         $clean[str_replace('wc-', '', $key)] = $label;
@@ -231,7 +234,8 @@ function wcon_get_clean_statuses() {
  * @param array $input Datos crudos del formulario ($_POST ya parseado por WP).
  * @return array Datos limpios a guardar en wp_options.
  */
-function wcon_sanitize_settings($input) {
+function wcon_sanitize_settings($input)
+{
     $defaults = ['url' => '', 'secret' => '', 'statuses' => [], 'active' => false];
     $previous = wcon_get_settings();
 
@@ -307,7 +311,8 @@ function wcon_sanitize_settings($input) {
  *
  * @return array ['url' => ..., 'secret' => ..., 'statuses' => [...], 'active' => bool]
  */
-function wcon_get_settings() {
+function wcon_get_settings()
+{
     $raw = get_option(WCON_OPTION_KEY, []);
 
     // Migración desde v2.x (lista de destinos) -> v3.0 (un solo destino).
@@ -326,7 +331,8 @@ function wcon_get_settings() {
 /**
  * Dibuja el contenido de la pestaña "Configuración" (URL, secreto, estados).
  */
-function wcon_render_configuration_tab() {
+function wcon_render_configuration_tab()
+{
     $settings     = wcon_get_settings();
     $all_statuses = wcon_get_clean_statuses(); // ej: 'cancelled' => 'Cancelado'
     $is_active    = $settings['active'];
@@ -405,7 +411,7 @@ function wcon_render_configuration_tab() {
                                 esc_html__('Se envía en la cabecera %s para que BillMySales valide el origen. Es obligatorio: sin esto, la configuración no se guarda.', 'billmysales'),
                                 '<code>X-WCON-Secret</code>'
                             );
-                            ?>
+    ?>
                         </p>
                     </td>
                 </tr>
@@ -414,7 +420,7 @@ function wcon_render_configuration_tab() {
                     <td>
                         <?php foreach ($all_statuses as $status_key => $status_label) :
                             $checked = in_array($status_key, $settings['statuses'], true);
-                        ?>
+                            ?>
                             <label style="display:inline-block;width:220px;margin-bottom:6px;">
                                 <input
                                     type="checkbox"
@@ -463,7 +469,8 @@ add_action('admin_init', function () {
  * @param array  $used_keys   Claves ya asignadas en este guardado, para no repetir.
  * @return string Clave limpia y unica (ej. "rut_cliente", "rut_cliente_2").
  */
-function wcon_generate_field_key($label, $used_keys) {
+function wcon_generate_field_key($label, $used_keys)
+{
     $base = sanitize_key(sanitize_title($label));
     if ($base === '') {
         $base = 'campo';
@@ -497,7 +504,8 @@ function wcon_generate_field_key($label, $used_keys) {
  * @param array $input Datos crudos del formulario.
  * @return array Lista de campos limpios: [['key','label','values','required'], ...]
  */
-function wcon_sanitize_custom_fields($input) {
+function wcon_sanitize_custom_fields($input)
+{
     $clean     = [];
     $used_keys = [];
 
@@ -555,7 +563,8 @@ function wcon_sanitize_custom_fields($input) {
  *
  * @return array
  */
-function wcon_get_custom_fields() {
+function wcon_get_custom_fields()
+{
     $fields = get_option(WCON_FIELDS_OPTION_KEY, []);
     return is_array($fields) ? $fields : [];
 }
@@ -567,7 +576,8 @@ function wcon_get_custom_fields() {
  * selector; si no, como texto libre), y si es obligatorio en el checkout.
  * También incluye el campo para personalizar el título de la sección.
  */
-function wcon_render_custom_fields_tab() {
+function wcon_render_custom_fields_tab()
+{
     $fields = wcon_get_custom_fields();
 
     // Si no hay ningun campo guardado todavia, mostramos una fila vacia
@@ -607,7 +617,7 @@ function wcon_render_custom_fields_tab() {
         <?php
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- misma función que arriba, ya escapa internamente.
         echo wcon_render_custom_field_row('__INDEX__', ['key' => '', 'label' => '', 'values' => [], 'required' => false]);
-        ?>
+    ?>
     </template>
     <?php
 }
@@ -621,7 +631,8 @@ function wcon_render_custom_fields_tab() {
  * @param array      $field ['key' => ..., 'label' => ..., 'values' => [...], 'required' => bool]
  * @return string HTML del bloque.
  */
-function wcon_render_custom_field_row($index, $field) {
+function wcon_render_custom_field_row($index, $field)
+{
     $values_text = implode(', ', $field['values']);
     ob_start();
     ?>
@@ -650,7 +661,7 @@ function wcon_render_custom_field_row($index, $field) {
                                 esc_html__('Clave interna: %s (no cambia aunque edites la etiqueta)', 'billmysales'),
                                 '<code>' . esc_html($field['key']) . '</code>'
                             );
-                            ?>
+                        ?>
                         </p>
                     <?php endif; ?>
                 </td>
@@ -830,20 +841,21 @@ add_action('wp_enqueue_scripts', function () {
  * @param string $custom_title Título fijo (WCON_SECTION_TITLE).
  * @return string JS listo para wp_add_inline_script().
  */
-function wcon_build_title_override_script($custom_title) {
+function wcon_build_title_override_script($custom_title)
+{
     $custom_json      = wp_json_encode($custom_title);
     $default_en_json  = wp_json_encode('Additional order information');
     $default_es_json  = wp_json_encode('Información adicional del pedido');
 
-    return "(function(){"
+    return '(function(){'
         . "if(typeof wp==='undefined'||!wp.hooks||typeof wp.hooks.addFilter!=='function'){return;}"
         . "wp.hooks.addFilter('i18n.gettext','BillMySales/override-order-info-title',function(translation,text){"
-        . "if(text===" . $default_en_json . "||translation===" . $default_es_json . "){"
-        . "return " . $custom_json . ";"
-        . "}"
-        . "return translation;"
-        . "});"
-        . "})();";
+        . 'if(text===' . $default_en_json . '||translation===' . $default_es_json . '){'
+        . 'return ' . $custom_json . ';'
+        . '}'
+        . 'return translation;'
+        . '});'
+        . '})();';
 }
 
 
@@ -906,7 +918,8 @@ const WCON_ORDER_PAYLOAD_FIELDS = [
  * @param WC_Order $order
  * @return array
  */
-function wcon_build_payload($order) {
+function wcon_build_payload($order)
+{
     $fallback = [
         'id'           => $order->get_id(),
         'number'       => $order->get_order_number(),
@@ -971,7 +984,8 @@ function wcon_build_payload($order) {
  * @param WC_Order $order
  * @return array
  */
-function wcon_append_custom_fields_to_payload($payload, $order) {
+function wcon_append_custom_fields_to_payload($payload, $order)
+{
     $custom_fields = wcon_get_custom_fields();
     if (empty($custom_fields)) {
         return $payload;
@@ -1002,7 +1016,8 @@ function wcon_append_custom_fields_to_payload($payload, $order) {
  * @param array $payload
  * @return array|WP_Error Respuesta de wp_remote_post().
  */
-function wcon_notify($settings, $payload) {
+function wcon_notify($settings, $payload)
+{
     $body = wp_json_encode($payload);
 
     $signature = base64_encode(
@@ -1032,7 +1047,8 @@ function wcon_notify($settings, $payload) {
  * @param string   $status  Estado actual de la orden (limpio, sin prefijo wc-).
  * @param WC_Order $order
  */
-function wcon_notify_if_applicable($order_id, $status, $order) {
+function wcon_notify_if_applicable($order_id, $status, $order)
+{
     static $already_notified = [];
     $dedup_key = $order_id . ':' . $status;
 
