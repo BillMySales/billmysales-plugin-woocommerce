@@ -29,7 +29,7 @@
 
 ## Instalación
 
-1. Sube la carpeta `BillMySales` al directorio `/wp-content/plugins/`.
+1. Sube la carpeta `BillMySales` al directorio `/wp-content/plugins/` o puedes subir el plugin en formato .zip en la interfaz de wordpres.
 2. Activa el plugin desde el panel de administración de WordPress.
 3. Ve a **WooCommerce → BillMySales** para configurar el webhook y los campos personalizados.
 
