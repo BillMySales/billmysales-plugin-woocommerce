@@ -908,12 +908,30 @@ const WCON_ORDER_PAYLOAD_FIELDS = [
  * WoocommerceAppInvoiceParser (el parser de BillMySales para el datasource
  * "woocommerce") efectivamente lee -- ver WCON_ORDER_PAYLOAD_FIELDS.
  *
- * Se usa el controlador REST real de WooCommerce para obtener esos campos
- * ya formateados (fechas, montos, taxes de cada line item, etc.) en vez de
- * armarlos a mano, para no tener que replicar esa lógica de formato y para
- * que se mantenga sincronizada automáticamente si WooCommerce cambia algo
- * en una futura versión. El array completo que devuelve el controlador se
- * recorta despues con el whitelist de arriba.
+ * Se arma haciendo una petición REST interna real con rest_do_request() al
+ * mismo endpoint publico que expone WooCommerce (GET /wc/v3/orders/{id}),
+ * en vez de instanciar WC_REST_Orders_Controller y llamar directo a uno de
+ * sus metodos internos. Es el mismo patron que usa el sistema NATIVO de
+ * Webhooks de WooCommerce (WC_Webhook::build_payload(), a traves de
+ * RestApiUtil::get_endpoint_data()) -- pasar por rest_do_request() es la
+ * forma oficial y estable de reusar la logica de un controller REST sin
+ * depender del nombre exacto de sus metodos internos. Esos SI cambian sin
+ * aviso entre versiones de WooCommerce: este mismo codigo antes llamaba a
+ * "prepare_item_for_response()", que WooCommerce dejo de sobreescribir en
+ * sus controllers CRUD (lo reemplazaron por "prepare_object_for_response()")
+ * sin ningun aviso de deprecacion, y eso rompio el envio de notificaciones
+ * por completo.
+ *
+ * El endpoint de ordenes exige permisos (ver pedidos privados), que no
+ * existen cuando este hook corre sin usuario logueado -- un checkout de un
+ * cliente invitado, por ejemplo. En vez de suplantar al usuario actual
+ * (como hace WC_Webhook::build_payload() con wp_set_current_user(), lo que
+ * volveria "administrador" a TODO el request mientras dura la llamada,
+ * afectando cualquier otro chequeo de permisos que corra en el medio), se
+ * engancha el filtro puntual "woocommerce_rest_check_permissions" -- el
+ * mismo que usa internamente wc_rest_check_post_permissions() -- para
+ * autorizar la lectura de esta orden especifica unicamente. La identidad
+ * del usuario actual nunca cambia.
  *
  * @param WC_Order $order
  * @return array
@@ -928,40 +946,46 @@ function wcon_build_payload($order)
         'date_created' => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
     ];
 
-    if (!class_exists('WC_REST_Orders_Controller')) {
-        // Fallback minimo si la clase REST no esta disponible por algun motivo.
+    if (!function_exists('rest_do_request')) {
+        // Fallback minimo si la REST API de WordPress no esta disponible por algun motivo.
         return $fallback;
     }
 
-    $controller = new WC_REST_Orders_Controller();
-    $request    = new WP_REST_Request('GET', '/wc/v3/orders/' . $order->get_id());
-    $request->set_param('id', $order->get_id());
+    $order_id = $order->get_id();
 
-    // NOTA (fix): WooCommerce renombró internamente el método usado por sus
-    // controllers CRUD (orders, products, etc.) de "prepare_item_for_response"
-    // a "prepare_object_for_response". El "prepare_item_for_response" heredado
-    // de WP_REST_Controller ya no está sobreescrito por WC_REST_Orders_Controller
-    // y devuelve siempre un WP_Error ("Method not implemented"), lo que hacía
-    // que este payload fuera en realidad un WP_Error y que
-    // wcon_append_custom_fields_to_payload() explotara con un fatal error al
-    // intentar tratarlo como array -- tumbando el checkout completo. Se usa
-    // "prepare_object_for_response" (público en WC_REST_Orders_V2_Controller,
-    // que WC_REST_Orders_Controller extiende) porque es el método que
-    // realmente arma el array + agrega los "_links", equivalente al viejo
-    // "prepare_item_for_response".
-    $response = $controller->prepare_object_for_response($order, $request);
-
-    if (is_wp_error($response)) {
-        if (function_exists('wc_get_logger')) {
-            wc_get_logger()->error(
-                sprintf('BillMySales: no se pudo armar el payload REST de la orden #%d: %s', $order->get_id(), $response->get_error_message()),
-                ['source' => 'BillMySales']
-            );
+    $grant_permission = function ($permission, $context, $object_id, $post_type) use ($order_id) {
+        if ('shop_order' === $post_type && 'read' === $context && (int) $object_id === $order_id) {
+            return true;
         }
-        return $fallback;
-    }
 
-    $full_payload = $controller->prepare_response_for_collection($response);
+        return $permission;
+    };
+
+    add_filter('woocommerce_rest_check_permissions', $grant_permission, 10, 4);
+
+    try {
+        $request  = new WP_REST_Request('GET', '/wc/v3/orders/' . $order_id);
+        $response = rest_do_request($request);
+
+        if ($response->is_error()) {
+            if (function_exists('wc_get_logger')) {
+                $error_data = $response->get_data();
+                wc_get_logger()->error(
+                    sprintf(
+                        'BillMySales: no se pudo armar el payload REST de la orden #%d: %s',
+                        $order_id,
+                        $error_data['message'] ?? 'error desconocido'
+                    ),
+                    ['source' => 'BillMySales']
+                );
+            }
+            return $fallback;
+        }
+
+        $full_payload = rest_get_server()->response_to_data($response, false);
+    } finally {
+        remove_filter('woocommerce_rest_check_permissions', $grant_permission, 10);
+    }
 
     return array_intersect_key($full_payload, array_flip(WCON_ORDER_PAYLOAD_FIELDS));
 }
