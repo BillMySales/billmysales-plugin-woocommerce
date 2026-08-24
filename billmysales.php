@@ -204,6 +204,27 @@ add_action('admin_init', function () {
 });
 
 /**
+ * Estados que NUNCA deben notificarse, sin importar la configuracion
+ * guardada. Se excluyen de la lista seleccionable en wcon_get_clean_statuses()
+ * y ademas se bloquean en tiempo de ejecucion en wcon_notify_if_applicable()
+ * -- unica fuente de verdad para no tener que mantener la misma lista en
+ * dos lugares.
+ *
+ * Se confirmo empiricamente que en el instante exacto en que WooCommerce
+ * dispara el hook de una orden recien nacida en "pending", los line_items a
+ * veces todavia no estan guardados (es una condicion de carrera propia de
+ * WooCommerce, no de este plugin), lo que hace que BillMySales reciba un
+ * pedido sin productos y lo rechace (o incluso falle con un error 500 sin
+ * control). "on-hold" sufre lo mismo: para pagos offline (ej. transferencia
+ * bancaria/BACS), WooCommerce hace la transicion pending -> on-hold DENTRO
+ * de la misma peticion del checkout inicial. Se decidio con el equipo no
+ * ofrecer ninguno de los dos como estado notificable.
+ *
+ * @var string[]
+ */
+const WCON_NOTIFY_EXCLUDED_STATUSES = ['pending', 'on-hold'];
+
+/**
  * Devuelve la lista de estados validos de WooCommerce, SIN el prefijo "wc-".
  *
  * wc_get_order_statuses() devuelve claves con prefijo "wc-" (ej. "wc-cancelled"),
@@ -211,13 +232,19 @@ add_action('admin_init', function () {
  * prefijo (ej. "cancelled"). Usamos esta misma forma "limpia" en todo el
  * plugin para no volver a mezclar los dos formatos.
  *
- * @return array Ej: ['pending' => 'Pendiente de pago', 'completed' => 'Completado', ...]
+ * No incluye los estados en WCON_NOTIFY_EXCLUDED_STATUSES.
+ *
+ * @return array Ej: ['processing' => 'Procesando', 'completed' => 'Completado', ...]
  */
 function wcon_get_clean_statuses()
 {
     $clean = [];
     foreach (wc_get_order_statuses() as $key => $label) {
-        $clean[str_replace('wc-', '', $key)] = $label;
+        $clean_key = str_replace('wc-', '', $key);
+        if (in_array($clean_key, WCON_NOTIFY_EXCLUDED_STATUSES, true)) {
+            continue;
+        }
+        $clean[$clean_key] = $label;
     }
     return $clean;
 }
@@ -1073,6 +1100,12 @@ function wcon_notify($settings, $payload)
  */
 function wcon_notify_if_applicable($order_id, $status, $order)
 {
+    // Resguardo: nunca notificar en los estados excluidos, sin importar lo
+    // que haya guardado en la configuracion (ver WCON_NOTIFY_EXCLUDED_STATUSES).
+    if (in_array($status, WCON_NOTIFY_EXCLUDED_STATUSES, true)) {
+        return;
+    }
+
     static $already_notified = [];
     $dedup_key = $order_id . ':' . $status;
 
