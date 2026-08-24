@@ -16,11 +16,12 @@ Notifies your own webhook when a WooCommerce order changes status, including cus
 
 BillMySales sends an HTTP POST notification to a configurable URL (your own billing service or another external system) whenever a WooCommerce order reaches one of the statuses you select.
 
-**Important — privacy and data sent to third parties:** this plugin sends order data to the URL that you, the store administrator, configure yourself. The data included is: order ID and status, currency and total, creation/modification/payment dates, billing first name, last name, email and phone, the purchased line items, and the values of any custom fields you have defined. No data is sent to Derafu or to any third party not explicitly configured by you; the destination and the authentication secret are the store administrator's own responsibility and configuration.
+**Important — privacy and data sent to third parties:** this plugin sends order data to the URL that you, the store administrator, configure yourself. The data included follows the same structure as WooCommerce's own REST API order response: order ID, number and status, currency and totals (including taxes, shipping and discounts), creation/payment/completion dates, billing and shipping address (name, company, address, email, phone), payment method, the purchased line items, shipping and fee lines, applied coupons, and the values of any custom fields you have defined. No data is sent to Derafu or to any third party not explicitly configured by you; the destination and the authentication secret are the store administrator's own responsibility and configuration.
 
 = Features =
 
 * Configure a destination URL and a secret (sent in the `X-WCON-Secret` header) to validate the origin of each notification.
+* Each notification is also signed with HMAC-SHA256 (sent in the `X-WC-Webhook-Signature` header) so the destination can verify payload integrity.
 * Choose which order statuses should trigger a notification.
 * Enable or disable the integration without losing the saved configuration.
 * Add custom fields to the WooCommerce Cart & Checkout Blocks, in their own section.
@@ -49,7 +50,7 @@ No. Los campos personalizados usan la API de "Additional Checkout Fields" de Woo
 
 = ¿Dónde se guarda el secreto? =
 
-En la opción `wcon_settings` de la base de datos de WordPress (`wp_options`), y se envía en cada notificación en la cabecera HTTP `X-WCON-Secret`. Se recomienda usar una URL de destino con HTTPS para que el secreto viaje cifrado.
+En la opción `wcon_settings` de la base de datos de WordPress (`wp_options`), y se envía en cada notificación en la cabecera HTTP `X-WCON-Secret`. El mismo secreto también se usa para firmar el cuerpo de cada notificación con HMAC-SHA256, enviado en la cabecera `X-WC-Webhook-Signature`, para que el destino pueda validar que el payload no fue alterado. Se recomienda usar una URL de destino con HTTPS para que el secreto viaje cifrado.
 
 = ¿Qué pasa si desactivo o desinstalo el plugin? =
 
