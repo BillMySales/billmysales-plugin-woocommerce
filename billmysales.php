@@ -856,67 +856,108 @@ function wcon_build_title_override_script($custom_title) {
 // ============================================================
 
 /**
- * Construye el payload JSON simple para una orden.
+ * Campos del payload REST de WooCommerce que BillMySales efectivamente lee
+ * para su datasource "woocommerce" (confirmado revisando el parser real que
+ * usa BillMySales, WoocommerceAppInvoiceParser: schema de validación +
+ * método _parse()). Todo lo demás que trae el payload REST completo
+ * (_links, refunds, version, cart_hash, order_key, tax_lines, meta_data a
+ * nivel de orden, etc.) ese parser lo ignora, así que no se envía.
+ *
+ * @var string[]
+ */
+const WCON_ORDER_PAYLOAD_FIELDS = [
+    'id',
+    'number',
+    'status',
+    'date_created',
+    'date_paid',
+    'date_completed',
+    'prices_include_tax',
+    'total',
+    'total_tax',
+    'discount_total',
+    'discount_tax',
+    'shipping_total',
+    'shipping_tax',
+    'customer_id',
+    'billing',
+    'shipping',
+    'line_items',
+    'fee_lines',
+    'coupon_lines',
+    'shipping_lines',
+    'currency',
+    'payment_method',
+    'payment_method_title',
+];
+
+/**
+ * Construye el payload de la orden con SOLO los campos que
+ * WoocommerceAppInvoiceParser (el parser de BillMySales para el datasource
+ * "woocommerce") efectivamente lee -- ver WCON_ORDER_PAYLOAD_FIELDS.
+ *
+ * Se usa el controlador REST real de WooCommerce para obtener esos campos
+ * ya formateados (fechas, montos, taxes de cada line item, etc.) en vez de
+ * armarlos a mano, para no tener que replicar esa lógica de formato y para
+ * que se mantenga sincronizada automáticamente si WooCommerce cambia algo
+ * en una futura versión. El array completo que devuelve el controlador se
+ * recorta despues con el whitelist de arriba.
  *
  * @param WC_Order $order
  * @return array
  */
 function wcon_build_payload($order) {
-    $line_items = [];
-    foreach ($order->get_items() as $item) {
-        // Los ítems devueltos por get_items() sin argumentos son siempre
-        // de tipo 'line_item' (productos), pero WooCommerce los tipa de
-        // forma genérica como WC_Order_Item. Este chequeo instanceof no
-        // solo deja conforme a PHPStan (que así sí reconoce
-        // get_product_id()/get_total() como métodos válidos), sino que
-        // además es una protección real: si algún día se llama
-        // get_items() con otros tipos (fee, shipping, tax), este ítem se
-        // salta en vez de fallar con un error fatal.
-        if (!$item instanceof WC_Order_Item_Product) {
-            continue;
-        }
+    $fallback = [
+        'id'           => $order->get_id(),
+        'number'       => $order->get_order_number(),
+        'status'       => $order->get_status(),
+        'total'        => $order->get_total(),
+        'date_created' => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
+    ];
 
-        $line_items[] = [
-            'product_id' => $item->get_product_id(),
-            'name'       => $item->get_name(),
-            'quantity'   => $item->get_quantity(),
-            'total'      => $item->get_total(),
-        ];
+    if (!class_exists('WC_REST_Orders_Controller')) {
+        // Fallback minimo si la clase REST no esta disponible por algun motivo.
+        return $fallback;
     }
 
-    return [
-        'event'         => 'order_status_notification',
-        'order_id'      => $order->get_id(),
-        'status'        => $order->get_status(),
-        'currency'      => $order->get_currency(),
-        'total'         => $order->get_total(),
-        'date_created'  => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
-        'date_modified' => $order->get_date_modified() ? $order->get_date_modified()->date('c') : null,
-        'date_paid'     => $order->get_date_paid() ? $order->get_date_paid()->date('c') : null,
-        'billing'       => [
-            'first_name' => $order->get_billing_first_name(),
-            'last_name'  => $order->get_billing_last_name(),
-            'email'      => $order->get_billing_email(),
-            'phone'      => $order->get_billing_phone(),
-        ],
-        'line_items' => $line_items,
-        'source' => home_url(),
-    ];
+    $controller = new WC_REST_Orders_Controller();
+    $request    = new WP_REST_Request('GET', '/wc/v3/orders/' . $order->get_id());
+    $request->set_param('id', $order->get_id());
+
+    $response = $controller->prepare_object_for_response($order, $request);
+
+    if (is_wp_error($response)) {
+        if (function_exists('wc_get_logger')) {
+            wc_get_logger()->error(
+                sprintf('BillMySales: no se pudo armar el payload REST de la orden #%d: %s', $order->get_id(), $response->get_error_message()),
+                ['source' => 'BillMySales']
+            );
+        }
+        return $fallback;
+    }
+
+    $full_payload = $controller->prepare_response_for_collection($response);
+
+    return array_intersect_key($full_payload, array_flip(WCON_ORDER_PAYLOAD_FIELDS));
 }
 
 /**
- * Agrega los valores de los campos personalizados al payload de la
- * notificación, leyéndolos como metadatos de la orden.
+ * Agrega los campos personalizados DENTRO del array "meta_data" del
+ * payload, con el mismo formato {id,key,value} que usa WooCommerce para
+ * el resto de sus metadatos nativos (ver ejemplo real: "amount",
+ * "authorizationCode", etc. en el payload que ya confirmamos que
+ * BillMySales acepta).
  *
- * CONFIRMADO CON UNA ORDEN DE PRUEBA REAL (WooCommerce 10.9.4): para
- * campos registrados con location "order", WooCommerce guarda el
- * metadato con el prefijo "_wc_other/" antes del namespace/clave -- NO
- * el patron "_{namespace}/{key}" que se habia asumido inicialmente sin
- * probar.
+ * Los campos personalizados de este plugin se guardan como metadato
+ * PRIVADO de la orden (prefijo "_wc_other/..."), y la API REST nativa de
+ * WooCommerce excluye por defecto los metadatos que empiezan con "_" --
+ * por eso no aparecen solos en wcon_build_payload(). Se agregan aca a
+ * mano, con la clave "limpia" (sin el prefijo interno), para que viajen
+ * dentro de "meta_data" igual que cualquier otro metadato visible.
  *
- * @param array    $payload Payload ya armado por wcon_build_payload().
+ * @param array    $payload
  * @param WC_Order $order
- * @return array Payload con los campos personalizados agregados.
+ * @return array
  */
 function wcon_append_custom_fields_to_payload($payload, $order) {
     $custom_fields = wcon_get_custom_fields();
@@ -924,10 +965,19 @@ function wcon_append_custom_fields_to_payload($payload, $order) {
         return $payload;
     }
 
-    $payload['custom_fields'] = [];
+    if (!isset($payload['meta_data']) || !is_array($payload['meta_data'])) {
+        $payload['meta_data'] = [];
+    }
+
     foreach ($custom_fields as $custom_field) {
         $meta_key = '_wc_other/' . WCON_FIELDS_NAMESPACE . '/' . $custom_field['key'];
-        $payload['custom_fields'][$custom_field['key']] = $order->get_meta($meta_key);
+        $value    = $order->get_meta($meta_key);
+
+        $payload['meta_data'][] = [
+            'id'    => 0, // No es un meta_id real de wp_postmeta, solo mantiene el mismo shape.
+            'key'   => $custom_field['key'],
+            'value' => $value,
+        ];
     }
 
     return $payload;
