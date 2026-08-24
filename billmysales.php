@@ -991,15 +991,22 @@ function wcon_append_custom_fields_to_payload($payload, $order) {
  * @return array|WP_Error Respuesta de wp_remote_post().
  */
 function wcon_notify($settings, $payload) {
+    $body = wp_json_encode($payload);
+
+    $signature = base64_encode(
+        hash_hmac('sha256', $body, $settings['secret'], true)
+    );
+
     $headers = [
-        'Content-Type'  => 'application/json',
-        'X-WCON-Secret' => $settings['secret'],
+        'Content-Type'            => 'application/json',
+        'X-WCON-Secret'           => $settings['secret'],
+        'X-WC-Webhook-Signature'  => $signature,
     ];
 
     return wp_remote_post($settings['url'], [
         'timeout' => 15,
         'headers' => $headers,
-        'body'    => wp_json_encode($payload),
+        'body'    => $body,
     ]);
 }
 
