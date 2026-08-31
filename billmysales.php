@@ -448,13 +448,7 @@ function wcon_render_configuration_tab()
                             </button>
                         </div>
                         <p class="description">
-                            <?php
-                            printf(
-                                /* translators: %s: nombre de la cabecera HTTP */
-                                esc_html__('Se envía en la cabecera %s para que BillMySales valide el origen. Es obligatorio: sin esto, la configuración no se guarda.', 'billmysales'),
-                                '<code>X-WCON-Secret</code>'
-                            );
-    ?>
+                            Clave secreta para validar el envío de las notificaciones a BillMySales
                         </p>
                     </td>
                 </tr>
@@ -475,6 +469,9 @@ function wcon_render_configuration_tab()
                                 <code><?php echo esc_html($status_key); ?></code>
                             </label>
                         <?php endforeach; ?>
+                        <p class="description">
+                            Solo se notificará a BillMySales cuando el pedido cambie a uno de estos estados
+                        </p>
                     </td>
                 </tr>
             </table>
@@ -691,7 +688,7 @@ function wcon_render_custom_field_row($index, $field)
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php esc_html_e('Valores (opcional)', 'billmysales'); ?></th>
+                <th scope="row"><?php esc_html_e('Valores', 'billmysales'); ?></th>
                 <td>
                     <input
                         type="text"
