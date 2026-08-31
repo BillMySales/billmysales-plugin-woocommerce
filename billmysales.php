@@ -719,12 +719,15 @@ function wcon_render_custom_field_row($index, $field)
                     </label>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"></th>
+                <td>
+                    <button type="button" class="button-link-delete wcon-remove-field">
+                        <?php esc_html_e('Eliminar este campo', 'billmysales'); ?>
+                    </button>
+                </td>
+            </tr>
         </table>
-        <p style="margin-top:12px;">
-            <button type="button" class="button-link-delete wcon-remove-field">
-                <?php esc_html_e('Eliminar este campo', 'billmysales'); ?>
-            </button>
-        </p>
     </div>
     <?php
     return ob_get_clean();
