@@ -535,14 +535,12 @@ function wcon_generate_field_key($label, $used_keys)
  * Cada fila necesita al menos una etiqueta para conservarse; filas sin
  * etiqueta (ej. una fila vacia que quedo al agregar de mas) se descartan.
  *
- * IMPORTANTE: las claves (key) de TODOS los campos que llegan en el
- * formulario -- editados y nuevos -- se recolectan primero, antes de
- * generar ninguna clave nueva. Antes esto no pasaba: si un campo editado
- * conservaba una key que por casualidad coincidía con la key recién
- * generada para un campo nuevo en el mismo envío, terminaban dos campos
- * con la misma key (y luego WooCommerce Blocks intenta registrar dos
- * campos con el mismo id, lo que dispara una excepción). Ya no depende
- * de que las filas existentes vengan siempre antes que las nuevas en el HTML.
+ * La clave SIEMPRE se recalcula a partir de la etiqueta actual -- no se
+ * conserva ninguna clave anterior. Cada notificación es un envío
+ * independiente, así que no hay ningún historial que "romper" al cambiar
+ * la etiqueta (y con ella, la clave). Si dos etiquetas distintas producen
+ * la misma clave (ej. "RUT" y "R.U.T."), wcon_generate_field_key() le
+ * agrega un sufijo numerico para que no choquen entre si.
  *
  * @param array $input Datos crudos del formulario.
  * @return array Lista de campos limpios: [['key','label','values','required'], ...]
@@ -557,24 +555,12 @@ function wcon_sanitize_custom_fields($input)
     }
 
     foreach ($input['fields'] as $raw_field) {
-        if (!empty($raw_field['key'])) {
-            $used_keys[] = sanitize_key($raw_field['key']);
-        }
-    }
-
-    foreach ($input['fields'] as $raw_field) {
         if (empty($raw_field['label'])) {
             continue; // Fila vacia, se descarta.
         }
 
         $label = sanitize_text_field($raw_field['label']);
-
-        // Si el campo ya existia (edicion), reutilizamos su clave para no
-        // "romper" el vinculo con datos ya guardados en ordenes anteriores.
-        // Si es un campo nuevo, generamos una clave a partir de la etiqueta.
-        $key = !empty($raw_field['key'])
-            ? sanitize_key($raw_field['key'])
-            : wcon_generate_field_key($label, $used_keys);
+        $key   = wcon_generate_field_key($label, $used_keys);
 
         $used_keys[] = $key;
 
@@ -680,11 +666,6 @@ function wcon_render_custom_field_row($index, $field)
     ob_start();
     ?>
     <div class="wcon-field" style="border:1px solid #dcdcde;padding:16px;margin-bottom:16px;background:#fff;">
-        <!-- La clave se mantiene oculta y fija una vez creado el campo, para
-             no perder el vinculo con datos ya guardados en ordenes anteriores
-             si el admin solo le cambia el nombre visible (label) despues. -->
-        <input type="hidden" name="<?php echo esc_attr(WCON_FIELDS_OPTION_KEY); ?>[fields][<?php echo esc_attr($index); ?>][key]" value="<?php echo esc_attr($field['key']); ?>" />
-
         <table class="form-table" role="presentation" style="margin:0;">
             <tr>
                 <th scope="row" style="width:180px;"><?php esc_html_e('Etiqueta*', 'billmysales'); ?></th>
@@ -701,7 +682,7 @@ function wcon_render_custom_field_row($index, $field)
                             <?php
                             printf(
                                 /* translators: %s: clave interna del campo */
-                                esc_html__('Clave interna: %s (no cambia aunque edites la etiqueta)', 'billmysales'),
+                                esc_html__('Clave interna: %s', 'billmysales'),
                                 '<code>' . esc_html($field['key']) . '</code>'
                             );
                         ?>
