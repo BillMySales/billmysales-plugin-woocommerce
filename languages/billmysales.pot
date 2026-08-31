@@ -1,0 +1,153 @@
+# Copyright (C) 2026 Derafu
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: BillMySales 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/billmysales\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-31T16:55:56+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: billmysales\n"
+
+#. Plugin Name of the plugin
+#: billmysales.php
+msgid "BillMySales"
+msgstr ""
+
+#. Description of the plugin
+#: billmysales.php
+msgid "Notifica a una URL configurable (webhook propio) cuando una orden de WooCommerce llega a alguno de los estados seleccionados, e incluye campos personalizados configurables agregados al checkout por bloques (plantilla estándar). El destino tiene su propio secreto (obligatorio) y puede activarse/desactivarse sin borrar su configuración. Este plugin envía datos del pedido (nombre, apellido, email, teléfono, montos y campos personalizados) a la URL configurada por el propio administrador de la tienda."
+msgstr ""
+
+#. Author of the plugin
+#: billmysales.php
+msgid "Derafu"
+msgstr ""
+
+#: billmysales.php:157
+#: billmysales.php:445
+msgid "Mostrar clave"
+msgstr ""
+
+#: billmysales.php:158
+msgid "Ocultar clave"
+msgstr ""
+
+#: billmysales.php:184
+msgid "Configuración"
+msgstr ""
+
+#: billmysales.php:187
+msgid "Campos del checkout"
+msgstr ""
+
+#: billmysales.php:290
+msgid "Faltó la URL y/o el secreto, así que se borró la configuración anterior (ambos campos son obligatorios). Vuelve a completarlos y guarda de nuevo."
+msgstr ""
+
+#: billmysales.php:297
+msgid "Debes completar la URL y el secreto para guardar la configuración."
+msgstr ""
+
+#: billmysales.php:323
+msgid "La URL no usa HTTPS: el secreto viajará sin cifrar por la red. Se recomienda usar una URL https:// para proteger el secreto."
+msgstr ""
+
+#: billmysales.php:386
+msgid "Configura la URL a la que avisar, en qué estados se debe notificar, y el secreto que BillMySales usará para validar el origen de cada notificación."
+msgstr ""
+
+#: billmysales.php:391
+msgid "Aún no hay una URL y/o secreto guardados. La integración no funcionará hasta completar ambos campos."
+msgstr ""
+
+#: billmysales.php:400
+msgid "Estado"
+msgstr ""
+
+#: billmysales.php:409
+msgid "Activo"
+msgstr ""
+
+#: billmysales.php:412
+msgid "Si se desmarca, deja de notificarse sin borrar la configuración."
+msgstr ""
+
+#: billmysales.php:417
+msgid "URL de notificación*"
+msgstr ""
+
+#: billmysales.php:430
+msgid "Secreto*"
+msgstr ""
+
+#: billmysales.php:456
+msgid "Estados que notifican*"
+msgstr ""
+
+#: billmysales.php:479
+msgid "Guardar configuración"
+msgstr ""
+
+#: billmysales.php:619
+msgid "Estos campos se agregan al formulario de checkout, en su propio apartado, y se incluyen en la notificación que se envía a BillMySales."
+msgstr ""
+
+#: billmysales.php:634
+msgid "+ Agregar otro campo"
+msgstr ""
+
+#: billmysales.php:638
+msgid "Guardar campos"
+msgstr ""
+
+#: billmysales.php:668
+msgid "Etiqueta*"
+msgstr ""
+
+#: billmysales.php:675
+msgid "Ej: RUT, Razón social, Giro comercial"
+msgstr ""
+
+#. translators: %s: clave interna del campo
+#: billmysales.php:682
+#, php-format
+msgid "Clave interna: %s"
+msgstr ""
+
+#: billmysales.php:691
+msgid "Valores"
+msgstr ""
+
+#: billmysales.php:698
+msgid "Ej: Persona natural, Persona jurídica"
+msgstr ""
+
+#: billmysales.php:701
+msgid "Si escribes valores separados por coma, el campo se mostrará como un selector con esas opciones. Si lo dejas vacío, será un campo de texto libre."
+msgstr ""
+
+#: billmysales.php:706
+msgid "Obligatorio"
+msgstr ""
+
+#: billmysales.php:715
+msgid "El cliente debe completarlo para poder pagar"
+msgstr ""
+
+#: billmysales.php:723
+msgid "Eliminar este campo"
+msgstr ""
+
+#: billmysales.php:1228
+msgid "Más información sobre BillMySales"
+msgstr ""
+
+#: billmysales.php:1229
+msgid "Ver detalles"
+msgstr ""

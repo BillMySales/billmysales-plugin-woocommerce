@@ -1,0 +1,154 @@
+# English (United States) translation of BillMySales.
+# Copyright (C) 2026 Derafu
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: BillMySales 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/billmysales\n"
+"Last-Translator: Derafu <hola@derafu.org>\n"
+"Language-Team: Derafu <hola@derafu.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: manual\n"
+"X-Domain: billmysales\n"
+
+#. Plugin Name of the plugin
+#: billmysales.php
+msgid "BillMySales"
+msgstr "BillMySales"
+
+#. Description of the plugin
+#: billmysales.php
+msgid "Notifica a una URL configurable (webhook propio) cuando una orden de WooCommerce llega a alguno de los estados seleccionados, e incluye campos personalizados configurables agregados al checkout por bloques (plantilla estándar). El destino tiene su propio secreto (obligatorio) y puede activarse/desactivarse sin borrar su configuración. Este plugin envía datos del pedido (nombre, apellido, email, teléfono, montos y campos personalizados) a la URL configurada por el propio administrador de la tienda."
+msgstr "Notifies a configurable URL (your own webhook) whenever a WooCommerce order reaches one of the selected statuses, and includes configurable custom fields added to the block-based checkout (standard template). The destination has its own secret (required) and can be enabled/disabled without deleting its configuration. This plugin sends order data (first name, last name, email, phone, amounts, and custom fields) to the URL configured by the store administrator."
+
+#. Author of the plugin
+#: billmysales.php
+msgid "Derafu"
+msgstr "Derafu"
+
+#: billmysales.php:157
+#: billmysales.php:445
+msgid "Mostrar clave"
+msgstr "Show key"
+
+#: billmysales.php:158
+msgid "Ocultar clave"
+msgstr "Hide key"
+
+#: billmysales.php:184
+msgid "Configuración"
+msgstr "Settings"
+
+#: billmysales.php:187
+msgid "Campos del checkout"
+msgstr "Checkout fields"
+
+#: billmysales.php:290
+msgid "Faltó la URL y/o el secreto, así que se borró la configuración anterior (ambos campos son obligatorios). Vuelve a completarlos y guarda de nuevo."
+msgstr "The URL and/or the secret were missing, so the previous configuration was cleared (both fields are required). Fill them in again and save."
+
+#: billmysales.php:297
+msgid "Debes completar la URL y el secreto para guardar la configuración."
+msgstr "You must fill in the URL and the secret to save the configuration."
+
+#: billmysales.php:323
+msgid "La URL no usa HTTPS: el secreto viajará sin cifrar por la red. Se recomienda usar una URL https:// para proteger el secreto."
+msgstr "The URL does not use HTTPS: the secret will travel unencrypted over the network. Using an https:// URL is recommended to protect the secret."
+
+#: billmysales.php:386
+msgid "Configura la URL a la que avisar, en qué estados se debe notificar, y el secreto que BillMySales usará para validar el origen de cada notificación."
+msgstr "Configure the URL to notify, which statuses should trigger a notification, and the secret BillMySales will use to validate the origin of each notification."
+
+#: billmysales.php:391
+msgid "Aún no hay una URL y/o secreto guardados. La integración no funcionará hasta completar ambos campos."
+msgstr "There is no URL and/or secret saved yet. The integration will not work until both fields are completed."
+
+#: billmysales.php:400
+msgid "Estado"
+msgstr "Status"
+
+#: billmysales.php:409
+msgid "Activo"
+msgstr "Active"
+
+#: billmysales.php:412
+msgid "Si se desmarca, deja de notificarse sin borrar la configuración."
+msgstr "If unchecked, notifications stop without deleting the configuration."
+
+#: billmysales.php:417
+msgid "URL de notificación*"
+msgstr "Notification URL*"
+
+#: billmysales.php:430
+msgid "Secreto*"
+msgstr "Secret*"
+
+#: billmysales.php:456
+msgid "Estados que notifican*"
+msgstr "Statuses that notify*"
+
+#: billmysales.php:479
+msgid "Guardar configuración"
+msgstr "Save configuration"
+
+#: billmysales.php:619
+msgid "Estos campos se agregan al formulario de checkout, en su propio apartado, y se incluyen en la notificación que se envía a BillMySales."
+msgstr "These fields are added to the checkout form, in their own section, and are included in the notification sent to BillMySales."
+
+#: billmysales.php:634
+msgid "+ Agregar otro campo"
+msgstr "+ Add another field"
+
+#: billmysales.php:638
+msgid "Guardar campos"
+msgstr "Save fields"
+
+#: billmysales.php:668
+msgid "Etiqueta*"
+msgstr "Label*"
+
+#: billmysales.php:675
+msgid "Ej: RUT, Razón social, Giro comercial"
+msgstr "E.g.: Tax ID, Company name, Business activity"
+
+#. translators: %s: clave interna del campo
+#: billmysales.php:682
+#, php-format
+msgid "Clave interna: %s"
+msgstr "Internal key: %s"
+
+#: billmysales.php:691
+msgid "Valores"
+msgstr "Values"
+
+#: billmysales.php:698
+msgid "Ej: Persona natural, Persona jurídica"
+msgstr "E.g.: Individual, Company"
+
+#: billmysales.php:701
+msgid "Si escribes valores separados por coma, el campo se mostrará como un selector con esas opciones. Si lo dejas vacío, será un campo de texto libre."
+msgstr "If you enter comma-separated values, the field will be shown as a dropdown with those options. If left empty, it will be a free-text field."
+
+#: billmysales.php:706
+msgid "Obligatorio"
+msgstr "Required"
+
+#: billmysales.php:715
+msgid "El cliente debe completarlo para poder pagar"
+msgstr "The customer must fill this in to be able to pay"
+
+#: billmysales.php:723
+msgid "Eliminar este campo"
+msgstr "Remove this field"
+
+#: billmysales.php:1228
+msgid "Más información sobre BillMySales"
+msgstr "More information about BillMySales"
+
+#: billmysales.php:1229
+msgid "Ver detalles"
+msgstr "View details"

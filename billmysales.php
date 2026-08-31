@@ -5,6 +5,7 @@
  * Version: 1.0.0
  * Author: Derafu
  * Text Domain: billmysales
+ * Domain Path: /languages
  * Requires Plugins: woocommerce
  * Requires at least: 5.6
  * Requires PHP: 7.4
@@ -80,6 +81,21 @@ define('WCON_SECTION_TITLE', 'Información de facturación');
 define('WCON_FIELDS_OPTION_KEY', 'wcon_custom_fields');
 define('WCON_FIELDS_NAMESPACE', 'BillMySales');
 define('WCON_VERSION', '1.0.0');
+
+/**
+ * Carga las traducciones del plugin desde su propia carpeta /languages.
+ *
+ * A diferencia de un plugin publicado en WordPress.org (que recibe sus
+ * traducciones automaticamente en una carpeta central manejada por
+ * WordPress), este plugin es privado, asi que tiene que cargar sus propios
+ * archivos .mo con load_plugin_textdomain(). Los textos en el codigo estan
+ * en español (idioma "por defecto" de este plugin); el archivo en ingles
+ * (billmysales-en_US.mo) es una traduccion mas, igual que cualquier otro
+ * idioma que se agregue despues.
+ */
+add_action('init', function () {
+    load_plugin_textdomain('billmysales', false, dirname(plugin_basename(__FILE__)) . '/languages');
+});
 
 /**
  * Practica estandar recomendada por WooCommerce para que los plugins
