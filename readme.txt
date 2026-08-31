@@ -40,7 +40,7 @@ BillMySales sends an HTTP POST notification to a configurable URL (your own bill
 2. Activa el plugin desde el menú "Plugins" de WordPress.
 3. Ve a WooCommerce → BillMySales.
 4. En la pestaña "Configuración", completa la URL de notificación y el secreto (ambos obligatorios), selecciona los estados que deben notificar, y marca "Activo".
-5. Opcionalmente, en la pestaña "Campos personalizados", agrega los campos que quieras incluir en el checkout.
+5. Opcionalmente, en la pestaña "Campos del checkout", agrega los campos que quieras incluir en el checkout.
 
 == Frequently Asked Questions ==
 

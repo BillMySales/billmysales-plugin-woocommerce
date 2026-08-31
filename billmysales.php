@@ -184,7 +184,7 @@ function wcon_render_settings_page()
                 <?php esc_html_e('Configuración', 'billmysales'); ?>
             </a>
             <a href="?page=BillMySales&tab=campos" class="nav-tab <?php echo $tab === 'campos' ? 'nav-tab-active' : ''; ?>">
-                <?php esc_html_e('Campos personalizados', 'billmysales'); ?>
+                <?php esc_html_e('Campos del checkout', 'billmysales'); ?>
             </a>
         </nav>
 

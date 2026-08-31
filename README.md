@@ -45,7 +45,7 @@
 - **Secreto**: Clave compartida que se enviará en el header `X-WCON-Secret`, y que además se usa para firmar cada notificación con HMAC-SHA256 (header `X-WC-Webhook-Signature`).
 - **Estados que notifican**: Selecciona los estados de la orden que activarán la notificación.
 
-### 🔹 Pestaña "Campos personalizados"
+### 🔹 Pestaña "Campos del checkout"
 
 - Agrega campos adicionales al checkout (ubicación `order`).
 - Soporta campos de texto libre y selectores (definidos por valores separados por coma).
@@ -59,7 +59,7 @@
 El payload sigue la misma estructura que la API REST nativa de WooCommerce
 (`GET /wc/v3/orders/{id}`), recortada a solo los campos que BillMySales
 efectivamente utiliza para procesar el pedido. Los campos personalizados
-configurados en la pestaña "Campos personalizados" se agregan dentro de
+configurados en la pestaña "Campos del checkout" se agregan dentro de
 `meta_data`, en el mismo formato `{id, key, value}` que usa WooCommerce para
 sus propios metadatos.
 
