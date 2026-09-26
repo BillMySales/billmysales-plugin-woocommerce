@@ -33,7 +33,7 @@
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "friendsofphp/php-cs-fixer": "^3.95",
         "justinrainbow/json-schema": "^6.4",
-        "php-stubs/woocommerce-stubs": "^10.0",
+        "php-stubs/woocommerce-stubs": "^11.1",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-mockery": "^2.0",
