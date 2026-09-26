@@ -1,0 +1,18 @@
+# Weekly pull requests for outdated dependencies (and alerts for vulnerable
+# ones): the development tools (Composer, kept compatible with PHP 7.4 by
+# config.platform; npm) and the workflows' actions. Not docker/Dockerfile:
+# its PHP version is the plugin's lowest on purpose.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

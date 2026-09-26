@@ -1,0 +1,9 @@
+/vendor/
+/node_modules/
+/dist/
+/var/
+/.phpunit.cache/
+/.phpunit.result.cache
+# Compiled translations (make i18n / make build).
+/plugin/languages/*.mo
+/plugin/languages/*.l10n.php

@@ -1,0 +1,62 @@
+{
+    "name": "billmysales/billmysales-plugin-woocommerce",
+    "description": "BillMySales for WooCommerce: sends orders to BillMySales and adds custom fields to the checkout.",
+    "type": "wordpress-plugin",
+    "homepage": "https://www.billmysales.com",
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "BillMySales",
+            "homepage": "https://www.billmysales.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/BillMySales/billmysales-plugin-woocommerce/issues",
+        "source": "https://github.com/BillMySales/billmysales-plugin-woocommerce"
+    },
+    "autoload": {
+        "psr-4": {
+            "BillMySales\\WooCommerce\\": "plugin/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BillMySales\\TestsWooCommerce\\": "tests/src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "ext-xdebug": "*",
+        "brain/monkey": "^2.6",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "justinrainbow/json-schema": "^6.4",
+        "php-stubs/woocommerce-stubs": "^10.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-mockery": "^2.0",
+        "phpunit/phpunit": "^9.6",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "wp-coding-standards/wpcs": "^3.1"
+    },
+    "scripts": {
+        "tests": "XDEBUG_MODE=coverage vendor/bin/phpunit --configuration=phpunit.xml",
+        "phpcs-fix": "vendor/bin/php-cs-fixer fix -v --config=php-cs-fixer.php",
+        "phpcs": "vendor/bin/php-cs-fixer fix -v --dry-run --diff --config=php-cs-fixer.php",
+        "phpcs-rules": "vendor/bin/phpcs --standard=phpcs.xml",
+        "phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon --memory-limit=1G",
+        "phpstan-export": "vendor/bin/phpstan analyse --configuration=phpstan.neon --level 9 --generate-baseline"
+    },
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        },
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

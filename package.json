@@ -1,0 +1,18 @@
+{
+  "name": "billmysales-plugin-woocommerce",
+  "private": true,
+  "description": "Development tools of BillMySales for WooCommerce (JavaScript linter).",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint",
+    "lint-fix": "eslint --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-jsdoc": "^64.5.4",
+    "globals": "^17.12.0"
+  }
+}

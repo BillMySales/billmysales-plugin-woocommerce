@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    PHPUnit 9.6 (the last one for PHP 7.4, the lowest the plugin supports):
+    the same settings as the other projects, with 9.6's names
+    (cacheResultFile, forceCoversAnnotation, convert*ToExceptions,
+    <coverage><include>).
+-->
+<phpunit
+    backupGlobals="true"
+    cacheResultFile="var/cache/phpunit/test-results"
+    processIsolation="false"
+    executionOrder="depends,defects"
+    colors="true"
+    testdox="true"
+    forceCoversAnnotation="true"
+    beStrictAboutCoversAnnotation="true"
+    beStrictAboutOutputDuringTests="false"
+    beStrictAboutChangesToGlobalState="true"
+    convertDeprecationsToExceptions="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    stopOnError="true"
+    stopOnFailure="true"
+    stopOnWarning="true"
+    failOnEmptyTestSuite="true"
+    failOnWarning="true"
+    failOnRisky="true"
+    bootstrap="tests/bootstrap.php"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/src</directory>
+        </testsuite>
+    </testsuites>
+    <coverage
+        ignoreDeprecatedCodeUnits="true"
+        pathCoverage="false"
+    >
+        <include>
+            <directory suffix=".php">plugin/src</directory>
+        </include>
+        <report>
+            <text
+                outputFile="var/tests-coverage.txt"
+                showUncoveredFiles="true"
+            />
+            <clover outputFile="var/tests-coverage.xml" />
+        </report>
+    </coverage>
+    <logging>
+        <testdoxText outputFile="var/tests-testdox.txt"/>
+    </logging>
+</phpunit>

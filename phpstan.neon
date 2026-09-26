@@ -1,0 +1,18 @@
+parameters:
+    # Review level, from basic (1) to very thorough (9).
+    level: 6
+    # Source code directories to be reviewed.
+    paths:
+        - plugin
+        - tests
+    # Test doubles of WordPress and WooCommerce classes (PHPStan has the stubs).
+    excludePaths:
+        - tests/fixtures
+    # The lowest PHP the plugin supports (also when run on a newer one).
+    phpVersion: 70400
+    # WordPress stubs come with szepeviktor/phpstan-wordpress; WooCommerce's:
+    scanFiles:
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+    # Constants the plugin defines at runtime.
+    bootstrapFiles:
+        - tests/bootstrap.php

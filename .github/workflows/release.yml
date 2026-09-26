@@ -1,0 +1,45 @@
+name: Release
+
+# Pushing a vX.Y.Z tag (the plugin's version): the tests (ci.yml), then the
+# end-to-end tests (e2e.yml), and only when both passed, the zip is built
+# and published as a GitHub Release: the file users install.
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  tests:
+    name: Tests
+    uses: ./.github/workflows/ci.yml
+
+  e2e:
+    name: End-to-end tests
+    needs: tests
+    uses: ./.github/workflows/e2e.yml
+
+  release:
+    name: Release
+    needs: [tests, e2e]
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check that the tag is the plugin's version
+        run: make check-tag TAG=${{ github.ref_name }} check-version
+
+      # Compiles the translations (WP-CLI image) and zips plugin/ (tools image).
+      - name: Build the zip
+        run: make build
+
+      - name: Publish the release
+        run: |
+          make release-notes > dist/release-notes.md
+          gh release create "${{ github.ref_name }}" dist/*.zip --title "${{ github.ref_name }}" --notes-file dist/release-notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}

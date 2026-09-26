@@ -1,0 +1,14 @@
+/* BillMySales settings page (WooCommerce > BillMySales). */
+
+.billmysales-status {
+    display: inline-block;
+    min-width: 220px;
+    margin-bottom: 6px;
+}
+
+.billmysales-field {
+    border: 1px solid #dcdcde;
+    padding: 0 16px;
+    margin-bottom: 16px;
+    background: #fff;
+}

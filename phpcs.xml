@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+    Rules PHP CS Fixer (the coding style, php-cs-fixer.php) doesn't have:
+    - WordPress' security rules (escaped output, nonces, sanitized input,
+      database access), the ones the WooCommerce Marketplace's security test
+      (QIT) runs, in the plugin's code.
+    - A docblock for every class, function (with its @param and @return
+      tags) and property, in the plugin and the tests. File docblocks are
+      checked by `make check-docs` (they go after declare(strict_types=1),
+      where Squiz.Commenting.FileComment doesn't look).
+-->
+<ruleset name="BillMySales WooCommerce">
+    <file>plugin</file>
+    <file>tests</file>
+    <exclude-pattern>plugin/languages/*</exclude-pattern>
+    <arg name="extensions" value="php"/>
+    <arg value="sp"/>
+    <arg name="colors"/>
+
+    <rule ref="WordPress.Security">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.DB">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+
+    <rule ref="Squiz.Commenting.ClassComment.Missing"/>
+    <rule ref="Squiz.Commenting.FunctionComment.Missing"/>
+    <rule ref="Squiz.Commenting.FunctionComment.MissingParamTag"/>
+    <rule ref="Squiz.Commenting.FunctionComment.MissingReturn"/>
+    <rule ref="Squiz.Commenting.VariableComment.Missing"/>
+</ruleset>
