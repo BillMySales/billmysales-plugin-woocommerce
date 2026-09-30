@@ -15,9 +15,48 @@ on:
 
 jobs:
   e2e:
-    name: End-to-end tests
-    timeout-minutes: 20
+    name: WordPress ${{ matrix.wordpress }}, WooCommerce ${{ matrix.woocommerce }}, PHP ${{ matrix.php }}
+    timeout-minutes: 25
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The combinations the Docker stack validates (its README, "Supported
+        # versions"): the versions the plugin supports are these. The two
+        # oldest run PHP 7.4 and 8.0 on the stack's old-php override.
+        include:
+          - wordpress: '6.5.5'
+            woocommerce: '8.9.5'
+            php: '7.4'
+            overrides: 'old-php'
+          - wordpress: '6.5.5'
+            woocommerce: '9.4.5'
+            php: '8.0'
+            overrides: 'old-php'
+          - wordpress: '6.6.2'
+            woocommerce: '9.8.7'
+            php: '8.1'
+            overrides: ''
+          - wordpress: '6.7.2'
+            woocommerce: '10.3.8'
+            php: '8.2'
+            overrides: ''
+          - wordpress: '6.8.3'
+            woocommerce: '10.7.0'
+            php: '8.3'
+            overrides: ''
+          - wordpress: '6.9.4'
+            woocommerce: '11.0.1'
+            php: '8.4'
+            overrides: ''
+          - wordpress: '7.0.4'
+            woocommerce: '11.1.2'
+            php: '8.3'
+            overrides: ''
+          - wordpress: '7.1.2'
+            woocommerce: '11.1.2'
+            php: '8.5'
+            overrides: ''
 
     steps:
       - name: Check out repository
@@ -26,11 +65,17 @@ jobs:
       # Only Docker is needed: every tool runs in a container.
       - name: Run the end-to-end tests
         run: make e2e
+        env:
+          E2E_STACK_OVERRIDES: ${{ matrix.overrides }}
+          E2E_STACK_ENV: |
+            WP_VERSION=${{ matrix.wordpress }}
+            WC_VERSION=${{ matrix.woocommerce }}
+            PHP_VERSION=${{ matrix.php }}
 
       - name: Upload the deliveries received
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-results
+          name: e2e-results-wp${{ matrix.wordpress }}-wc${{ matrix.woocommerce }}-php${{ matrix.php }}
           path: var/e2e
           if-no-files-found: ignore

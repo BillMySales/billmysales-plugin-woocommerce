@@ -23,7 +23,8 @@ receipt or invoice).
   same.
 - Compatible with HPOS and the block-based cart and checkout.
 
-Requirements: WordPress 6.5+, WooCommerce 8.9+ (tested up to 11.1), PHP 7.4+.
+Requirements: WordPress 6.5+, WooCommerce 8.9+, PHP 7.4+. Tested end to end
+on eight combinations (see [Supported versions](#supported-versions)).
 
 Installation
 ------------
@@ -137,6 +138,20 @@ new entries in `plugin/languages/billmysales-es_ES.po` and `-es_CL.po`.
 make e2e            # about 3 minutes; E2E_KEEP=1 keeps the stack running (then make e2e-clean)
 ```
 
+By default it runs on the stack's default versions. `E2E_STACK_ENV` (extra
+`NAME=value` lines, one per line, appended to the stack's `.env`) selects
+another combination, and `E2E_STACK_OVERRIDES` adds stack overrides by name
+(`old-php` for PHP 7.4 and 8.0):
+
+```shell
+E2E_STACK_OVERRIDES=old-php \
+E2E_STACK_ENV=$'WP_VERSION=6.5.5\nWC_VERSION=8.9.5\nPHP_VERSION=7.4' make e2e
+```
+
+`.github/workflows/e2e.yml` runs every supported combination.
+`E2E_RECEIVER_PORT` changes the receiver's port (default 8099) when another
+run holds it.
+
 `tests/e2e/run.sh` clones the
 [WooCommerce Docker stack](https://github.com/BillMySales/billmysales-docker-woocommerce)
 into `var/e2e/stack` (`STACK_REPO`, `STACK_REF`, default `master`), starts it
@@ -179,7 +194,9 @@ look at their structure or to replay).
 | 15 | Uninstall | settings and pending deliveries removed |
 
 The queue is run with WP-CLI (`wp action-scheduler run`) instead of
-waiting for the stack's cron. Not covered: how the admin page and the
+waiting for the stack's cron, and inspected with Action Scheduler's PHP
+functions (`as_get_scheduled_actions()`), which every supported WooCommerce
+release has. Not covered: how the admin page and the
 checkout look (check them in a browser: mount `plugin/` in the stack with
 its `overrides/plugin.yaml`, `PLUGIN_PATH=../billmysales-plugin-woocommerce/plugin`,
 after `make i18n` for the compiled translations).
@@ -196,6 +213,36 @@ push and pull request (the end-to-end deliveries are uploaded as the
 `e2e-results` artifact). Dependabot
 (`.github/dependabot.yml`) opens weekly pull requests for the Composer and
 npm tools and the workflows' actions.
+
+### Supported versions
+
+The plugin supports the combinations its end-to-end tests run on, which are
+the ones the WooCommerce Docker stack validates:
+
+| WordPress | WooCommerce | PHP |
+|-----------|-------------|-----|
+| 6.5.5 | 8.9.5 | 7.4 |
+| 6.5.5 | 9.4.5 | 8.0 |
+| 6.6.2 | 9.8.7 | 8.1 |
+| 6.7.2 | 10.3.8 | 8.2 |
+| 6.8.3 | 10.7.0 | 8.3 |
+| 6.9.4 | 11.0.1 | 8.4 |
+| 7.0.4 | 11.1.2 | 8.3 |
+| 7.1.2 | 11.1.2 | 8.5 |
+
+The plugin's header sets the minimums (`Requires at least: 6.5`,
+`WC requires at least: 8.9`, `Requires PHP: 7.4`): WordPress 6.5 is the first
+with the `Requires Plugins` header, and WooCommerce 8.9.0 is where
+`woocommerce_register_additional_checkout_field`, used for the block
+checkout's fields, became the stable API. Every WordPress and WooCommerce
+function, filter and class the plugin uses is present from WooCommerce 8.9.
+WordPress publishes usage statistics (api.wordpress.org): about 88% of sites
+run WordPress 6.5 or later and about 94% PHP 7.4 or later. WooCommerce
+requires PHP 7.4 or later and recommends 8.3 or later; each WooCommerce line
+requires a minimum WordPress (8.9 and 9.0: 6.4, 9.1 to 9.4: 6.5, 9.5 to 9.8:
+6.6, 9.9 to 10.3: 6.7, 10.4 to 10.7: 6.8, 10.8 to 11.0: 6.9, 11.1: 7.0). The
+official WordPress images have no PHP 7.4 or 8.0 for these WordPress
+versions, so those two rows use the stack's `old-php` override.
 
 ### Publishing on wordpress.org (pending)
 

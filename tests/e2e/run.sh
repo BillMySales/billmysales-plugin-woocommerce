@@ -20,7 +20,11 @@
 # receiver's (8099) must be free: stop the WooCommerce development stack.
 #
 # Environment: TOOLS_IMAGE (set by the Makefile), STACK_REPO, STACK_REF
-# (default master), E2E_KEEP.
+# (default master), E2E_KEEP, E2E_STACK_ENV (extra "NAME=value" lines, one per
+# line, appended to the stack's .env: e.g. WP_VERSION, WC_VERSION and
+# PHP_VERSION to test another combination), E2E_STACK_OVERRIDES (names of the
+# stack's overrides/<name>.yaml to add, e.g. old-php), E2E_RECEIVER_PORT
+# (default 8099, for when another end-to-end run holds it).
 
 set -euo pipefail
 
@@ -33,7 +37,7 @@ STACK_REPO="${STACK_REPO:-https://github.com/BillMySales/billmysales-docker-${PL
 STACK_REF="${STACK_REF:-master}"
 TOOLS_IMAGE="${TOOLS_IMAGE:?Run it with make e2e}"
 RECEIVER="${PROJECT}-receiver"
-RECEIVER_PORT=8099
+RECEIVER_PORT="${E2E_RECEIVER_PORT:-8099}"
 RECEIVER_URL="http://host.docker.internal:${RECEIVER_PORT}/"
 # A secret with characters that must survive the settings form and JSON.
 SECRET='e2e "secret"\x'
@@ -55,11 +59,15 @@ compose() { (cd "${STACK}" && docker compose "$@"); }
 # WP-CLI in the stack; its container messages go to the log.
 wp() { compose run --rm -T wp "$@" 2>> "${E2E}/stack.log"; }
 run_queue() { wp action-scheduler run --hooks=billmysales_deliver > /dev/null; }
-pending_jobs() { wp action-scheduler action list --hook=billmysales_deliver --status=pending --format=count; }
+# The pending deliveries and running one, with Action Scheduler's PHP API: the
+# `wp action-scheduler action` commands only exist in newer WooCommerce releases.
+pending_ids() { wp eval 'echo implode("\n", as_get_scheduled_actions(["hook" => "billmysales_deliver", "status" => ActionScheduler_Store::STATUS_PENDING, "per_page" => -1], "ids"));'; }
+pending_jobs() { pending_ids | sed '/^$/d' | wc -l | tr -d ' '; }
+run_action() { wp eval "ActionScheduler::runner()->process_action((int) $1);"; }
 received() { find "${E2E}/webhooks" -name '*.json' | wc -l | tr -d ' '; }
 respond() { echo "$1" > "${E2E}/respond"; }
 port_in_use() { (exec 3<> "/dev/tcp/127.0.0.1/$1") 2> /dev/null; }
-env_value() { sed -n "s/^$1=//p" "${STACK}/.env.dev.example" | head -1; }
+env_value() { { printf '%s\n' "${E2E_STACK_ENV:-}"; cat "${STACK}/.env.dev.example"; } | sed -n "s/^$1=//p" | head -1; }
 
 # Starts a test case: what the receiver got before it isn't checked.
 case_start() { printf '\n[%s] %s\n' "$1" "$2"; printf '%02d' "$1" > "${E2E}/case"; FROM="$(received)"; }
@@ -122,14 +130,25 @@ classic_checkout() { # <extra form fields, as curl arguments...>
     sed -n 's/.*"order_id":\([0-9]*\).*/\1/p' "${E2E}/checkout.json"
 }
 
-# Writes the stack's .env: the development template, this project name and,
-# with "mount", the plugin override pointing to plugin/.
+# Writes the stack's .env: the development template, E2E_STACK_ENV, this
+# project name and the overrides: E2E_STACK_OVERRIDES and, with "mount", the
+# plugin override pointing to plugin/.
 stack_env() { # mount|zip
+    local files="compose.yaml" override
+    if [ "$1" = mount ]; then
+        files="${files}:overrides/plugin.yaml"
+    fi
+    for override in ${E2E_STACK_OVERRIDES:-}; do
+        files="${files}:overrides/${override}.yaml"
+    done
     {
         cat "${STACK}/.env.dev.example"
+        if [ -n "${E2E_STACK_ENV:-}" ]; then
+            printf '%s\n' "${E2E_STACK_ENV}"
+        fi
         echo "COMPOSE_PROJECT_NAME=${PROJECT}"
+        echo "COMPOSE_FILE=${files}"
         if [ "$1" = mount ]; then
-            echo "COMPOSE_FILE=compose.yaml:overrides/plugin.yaml"
             echo "PLUGIN_PATH=${ROOT}/plugin"
             echo "PLUGIN_NAME=billmysales"
         fi
@@ -227,11 +246,11 @@ case_start 6 "BillMySales answers 503: retried with the same delivery"
 respond 503
 ORDER6="$(checkout "${FIELDS}")"
 run_queue
-RETRY="$(wp action-scheduler action list --hook=billmysales_deliver --status=pending --field=id)"
+RETRY="$(pending_ids)"
 if [ -n "${RETRY}" ]; then pass "a retry is scheduled"; else fail "no retry scheduled"; fi
 expect_note "${ORDER6}" "BillMySales: not sent (HTTP 503), retry 1 in "
 respond 200
-[ -n "${RETRY}" ] && wp action-scheduler action run "${RETRY}" > /dev/null
+[ -n "${RETRY}" ] && run_action "${RETRY}" > /dev/null
 check "$(order_expectations "${ORDER6}" processing "${FIELDS_META}" '"same_delivery": true' | sed 's/"count": 1/"count": 2/')"
 
 case_start 7 "BillMySales answers 401: not retried"
