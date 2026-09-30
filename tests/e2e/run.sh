@@ -69,6 +69,20 @@ respond() { echo "$1" > "${E2E}/respond"; }
 port_in_use() { (exec 3<> "/dev/tcp/127.0.0.1/$1") 2> /dev/null; }
 env_value() { { printf '%s\n' "${E2E_STACK_ENV:-}"; cat "${STACK}/.env.dev.example"; } | sed -n "s/^$1=//p" | head -1; }
 
+# Why the stack failed: the end of stack.log and the services' state, since
+# the CI console doesn't show var/e2e/stack.log. Then stops.
+stack_failed() { # <message>
+    {
+        echo "--- end of var/e2e/stack.log"
+        tail -n 60 "${E2E}/stack.log"
+        echo "--- services"
+        compose ps -a
+        echo "--- logs of setup and wordpress"
+        compose logs --tail 40 setup wordpress
+    } >&2 || true
+    die "$1"
+}
+
 # Starts a test case: what the receiver got before it isn't checked.
 case_start() { printf '\n[%s] %s\n' "$1" "$2"; printf '%02d' "$1" > "${E2E}/case"; FROM="$(received)"; }
 
@@ -198,7 +212,7 @@ docker run -d --name "${RECEIVER}" -u "$(id -u):$(id -g)" -p "${RECEIVER_PORT}:$
 
 say "Starting the stack, plugin mounted from plugin/ (log: var/e2e/stack.log)"
 stack_env mount
-compose up -d --wait >> "${E2E}/stack.log" 2>&1 || die "the stack didn't start (var/e2e/stack.log)"
+compose up -d --wait >> "${E2E}/stack.log" 2>&1 || stack_failed "the stack didn't start (var/e2e/stack.log)"
 wp plugin activate billmysales > /dev/null
 wp option update billmysales_settings --format=json \
     "{\"url\": \"${RECEIVER_URL}\", \"secret\": \"${SECRET_JSON}\", \"statuses\": [\"processing\", \"completed\"], \"active\": true}" > /dev/null
@@ -316,7 +330,7 @@ expect "$(wp option get billmysales_settings --format=json)" \
 
 say "Installing $(basename "${ZIP}") through WordPress (no mount)"
 stack_env zip
-compose up -d --wait >> "${E2E}/stack.log" 2>&1 || die "the stack didn't restart (var/e2e/stack.log)"
+compose up -d --wait >> "${E2E}/stack.log" 2>&1 || stack_failed "the stack didn't restart (var/e2e/stack.log)"
 compose run --rm -T -v "${ROOT}/dist:/dist:ro" wp plugin install "/dist/$(basename "${ZIP}")" --force --activate \
     >> "${E2E}/stack.log" 2>&1 || die "the zip didn't install (var/e2e/stack.log)"
 expect "$(wp plugin get billmysales --field=version)" "${VERSION}" "installed version"
