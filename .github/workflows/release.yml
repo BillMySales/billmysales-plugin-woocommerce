@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Check that the tag is the plugin's version
         run: make check-tag TAG=${{ github.ref_name }} check-version

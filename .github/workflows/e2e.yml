@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Only Docker is needed: every tool runs in a container. Docker Hub
       # answers 502 now and then, so the tools image is built with retries.
